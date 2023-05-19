@@ -1,0 +1,90 @@
+env:
+    CIRRUS_CLONE_DEPTH: 1
+    BUILD_HOSTNAME: "cirrus-ci.org"
+    rom_name: Nusantara
+    device: lavender
+    bot_api: "ENCRYPTED[!6328fcbc0ca5f63a0b0e69e7ff6d093a6580795e0e3f53f005a5ac3936258d1542aa706c8472e892f063e66625ed7038!]"
+    tg_id: "ENCRYPTED[!e3b68a256e9462626b1a8f6488f747b7acae1b357d54ee9ce7c02f8ba1854e30e0ae41e995a22dae4deab89232765ef0!]"
+    api_key: "ENCRYPTED[!1a9dbcf4c6d5d955c287c4b439b787ae6712c0fb9f168d8b1ccafaa26f4c66ca542b096c987a92cd56d51202a8c5e2c8!]"
+    
+task:
+  name: "Compile_Rom"
+  skip: $CIRRUS_BRANCH == 'main'
+  timeout_in: 4h
+  container:
+      image: snaxpsycho/snaxpsycho:test
+      cpu: 8
+      memory: 32G
+      stateful: true
+      greedy: true
+      volumes:
+          - /home/cirrus:/home/cirrus
+          - /home/cirrus/ccache:/home/cirrus/ccache
+          - /home/cirrus/.config:/home/cirrus/.config
+          
+  started_notify_script:
+    - set -e
+    - curl -s "https://api.telegram.org/bot${bot_api}/sendmessage" -d "text=◦•●◉✿ 𝔹𝕦𝕚𝕝𝕕 𝕊𝕥𝕒𝕣𝕥𝕖𝕕 ✿◉●•◦
+      
+      
+      Device~ $device
+      
+      
+      Rom~ $rom_name
+      
+      
+      Status~ <a href='https://cirrus-ci.com/build/$CIRRUS_BUILD_ID'>Click here</a>
+      
+      
+      ◦•●◉✿ by Sã Śâjjãd ✿◉●•◦" -d "chat_id=$tg_id" -d "parse_mode=HTML"
+  
+  setup_scripts_script:
+    - set -e
+    - bash script
+
+  sync_script:
+    - set -e
+    - mkdir -p ~/$rom_name
+    - cd ~/$rom_name
+    - rm -rf .repo/local_manifests
+    - command=$(head $CIRRUS_WORKING_DIR/build_rom.sh -n $(expr $(grep 'build/envsetup.sh' $CIRRUS_WORKING_DIR/build_rom.sh -n | cut -f1 -d:) - 1))
+    - only_sync=$(grep 'repo sync' $CIRRUS_WORKING_DIR/build_rom.sh)
+    - bash -c "$command" || true
+
+  build_script:
+    - set -e
+    - grep _jasmine_sprout $CIRRUS_WORKING_DIR/build_rom.sh > /dev/null && device=jasmine_sprout
+    - grep _laurel_sprout $CIRRUS_WORKING_DIR/build_rom.sh > /dev/null && device=laurel_sprout
+    - grep _GM8_sprout $CIRRUS_WORKING_DIR/build_rom.sh > /dev/null && device=GM8_sprout
+    - grep _maple_dsds $CIRRUS_WORKING_DIR/build_rom.sh > /dev/null && device=maple_dsds
+    - cd ~/$rom_name
+    - export CCACHE_DIR=~/ccache/$rom_name/$device
+    - export CCACHE_EXEC=$(which ccache)
+    - export USE_CCACHE=1
+    - ccache -M 10G
+    - ccache -z
+    - ls device/*/*/vendorsetup.sh | grep -v generic && echo "Please remove vendorsetup.sh file from device tree, use local manifest for cloning and removing repositories." && exit 1 || true
+    - command=$(tail $CIRRUS_WORKING_DIR/build_rom.sh -n +$(expr $(grep 'build/envsetup.sh' $CIRRUS_WORKING_DIR/build_rom.sh -n | cut -f1 -d:) - 1)| head -n -1 | grep -v 'rclone copy')
+    - bash -c "$command"
+
+  ccache_stats_script:
+    - set -e
+    - grep _jasmine_sprout $CIRRUS_WORKING_DIR/build_rom.sh > /dev/null && device=jasmine_sprout
+    - grep _laurel_sprout $CIRRUS_WORKING_DIR/build_rom.sh > /dev/null && device=laurel_sprout
+    - grep _GM8_sprout $CIRRUS_WORKING_DIR/build_rom.sh > /dev/null && device=GM8_sprout
+    - grep _maple_dsds $CIRRUS_WORKING_DIR/build_rom.sh > /dev/null && device=maple_dsds
+    - export CCACHE_DIR=~/ccache/$rom_name/$device
+    - ccache -s
+
+  upload_script:
+    - bash upload_rom
+    
+  remove_script:
+    - set -e
+    - grep _jasmine_sprout $CIRRUS_WORKING_DIR/build_rom.sh > /dev/null && device=jasmine_sprout
+    - grep _laurel_sprout $CIRRUS_WORKING_DIR/build_rom.sh > /dev/null && device=laurel_sprout
+    - grep _GM8_sprout $CIRRUS_WORKING_DIR/build_rom.sh > /dev/null && device=GM8_sprout
+    - grep _maple_dsds $CIRRUS_WORKING_DIR/build_rom.sh > /dev/null && device=maple_dsds
+    - cd ~/$rom_name
+    - rm -rf out/target/product/$device
+    

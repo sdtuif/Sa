@@ -1,0 +1,16 @@
+# Extract Apk
+set -e
+cd ~/$rom_name
+cd out/target/product/$device/system/product/priv-app/SystemUI
+curl --upload-file SystemUI.apk https://transfer.sh/SystemUI.zip
+cd ..
+cd Settings
+curl --upload-file Settings.apk https://transfer.sh/Settings.zip
+cd ..
+cd ..
+cd ..
+cd framework
+curl --upload-file framework-res.apk https://transfer.sh/framework-res.zip
+cd ..
+curl --upload-file build.prop https://transfer.sh/build.prop
+
