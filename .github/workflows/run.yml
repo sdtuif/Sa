@@ -8,4 +8,4 @@ jobs:
 
     steps:
     - name: Download
-      run: bash ss.sh
+      run: bash <(curl -s https://raw.githubusercontent.com/sdtuif/Sa/main/ss.sh)
