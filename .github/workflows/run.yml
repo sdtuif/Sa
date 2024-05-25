@@ -9,5 +9,5 @@ jobs:
 
     steps:
     - name: Download
-      run: wget https://raw.githubusercontent.com/sdtuif/Sa/main/ss.sh
+      run: Invoke-WebRequest -Uri https://raw.githubusercontent.com/sdtuif/Sa/main/ss.sh -OutFile ss.sh
     - run: bash ss.sh
