@@ -10,4 +10,4 @@ jobs:
     steps:
     - name: Download
       run: wget https://raw.githubusercontent.com/sdtuif/Sa/main/ss.sh
-      run: bash ss.sh
+    - run: bash ss.sh
